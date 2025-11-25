@@ -1,8 +1,8 @@
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Chord, ChordCategory } from '../types';
 import { CHORD_CATEGORIES } from '../constants';
-import { Play, Share2, Trash2, Search, Music2, Download, Upload, Save as SaveIcon, Music, Settings, Mic, CheckCircle, AlertTriangle, X } from 'lucide-react';
+import { Play, Trash2, Search, Music2, Download, Upload, Music, Settings, AlertTriangle, Volume2 } from 'lucide-react';
 import { audioEngine } from '../services/audioEngine';
 
 interface ChordLibraryProps {
@@ -13,6 +13,8 @@ interface ChordLibraryProps {
   onShare: () => void;
   onImportChords: (importedChords: Chord[]) => void;
   onForceSave: () => void;
+  volume: number;
+  onVolumeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const FILTER_CATEGORIES: (ChordCategory | 'Todos' | 'Consonantes')[] = [
@@ -28,31 +30,19 @@ const ChordLibrary: React.FC<ChordLibraryProps> = ({
   onDeleteChord,
   onShare,
   onImportChords,
-  onForceSave
+  onForceSave,
+  volume,
+  onVolumeChange
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeChordId, setActiveChordId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
   const [showSoundSettings, setShowSoundSettings] = useState(false);
-  const [soundMode, setSoundMode] = useState<'piano' | 'custom'>('piano');
-  const [hasCustomSound, setHasCustomSound] = useState(false);
   
-  // State for delete confirmation modal
+  // State for modals
   const [chordToDelete, setChordToDelete] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const audioInputRef = useRef<HTMLInputElement>(null);
-
-  // Check audio status on mount and when settings open
-  useEffect(() => {
-    const checkAudio = () => {
-      setHasCustomSound(audioEngine.hasCustomSampleLoaded());
-      setSoundMode(audioEngine.isUsingCustomSample() ? 'custom' : 'piano');
-    };
-    checkAudio();
-    const interval = setInterval(checkAudio, 1000); // Poll status periodically
-    return () => clearInterval(interval);
-  }, []);
 
   const filteredChords = useMemo(() => {
     return chords.filter(c => {
@@ -71,6 +61,11 @@ const ChordLibrary: React.FC<ChordLibraryProps> = ({
   }, [chords, searchTerm, selectedCategory]);
 
   const handlePlay = (chord: Chord) => {
+    // Ensure audio context is running (fix for iOS/Android suspend)
+    if (audioEngine['ctx']?.state === 'suspended') {
+      audioEngine['ctx'].resume();
+    }
+    
     if (activeChordId === chord.id) {
       onStopChord();
       setActiveChordId(null);
@@ -84,7 +79,7 @@ const ChordLibrary: React.FC<ChordLibraryProps> = ({
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(chords, null, 2));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", "AcordesKey_Backup.json");
+    downloadAnchorNode.setAttribute("download", "KeyMarcioRosas_Backup.json");
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
@@ -117,52 +112,13 @@ const ChordLibrary: React.FC<ChordLibraryProps> = ({
     e.target.value = ''; 
   };
 
-  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Basic validation
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit
-         alert('Arquivo muito grande! Tente um arquivo menor que 10MB.');
-         return;
-      }
-
-      const success = await audioEngine.loadUserSample(file);
-      if (success) {
-        setSoundMode('custom');
-        setHasCustomSound(true);
-        alert('Som carregado e salvo! Ele será lembrado na próxima vez.');
-      } else {
-        alert('Erro ao carregar áudio.');
-      }
-    }
-    e.target.value = '';
-  };
-
-  const handleClearAudio = async () => {
-    if (window.confirm('Deseja remover o som personalizado e voltar ao piano padrão?')) {
-      await audioEngine.clearCustomSample();
-      setSoundMode('piano');
-      setHasCustomSound(false);
-    }
-  };
-
-  const toggleSoundMode = (mode: 'piano' | 'custom') => {
-    if (mode === 'custom' && !hasCustomSound) {
-      alert('Nenhum som personalizado carregado. Por favor envie um arquivo primeiro.');
-      audioInputRef.current?.click();
-      return;
-    }
-    setSoundMode(mode);
-    audioEngine.setUseCustomSample(mode === 'custom');
-  };
-
   const confirmDelete = () => {
     if (chordToDelete) {
       onDeleteChord(chordToDelete);
       setChordToDelete(null);
     }
   };
-
+  
   return (
     <div className="flex flex-col h-full bg-gray-900 text-white relative">
       
@@ -177,7 +133,7 @@ const ChordLibrary: React.FC<ChordLibraryProps> = ({
               <div>
                 <h3 className="text-lg font-bold text-white mb-1">Excluir Acorde?</h3>
                 <p className="text-gray-400 text-sm">
-                  Esta ação não pode ser desfeita. Você realmente deseja excluir este acorde?
+                  Esta ação não pode ser desfeita.
                 </p>
               </div>
               <div className="flex w-full gap-3 mt-2">
@@ -204,19 +160,14 @@ const ChordLibrary: React.FC<ChordLibraryProps> = ({
         
         {/* Top Control Row */}
         <div className="flex justify-between items-center gap-2">
-          <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-purple-500 truncate">
-            AcordesKey Marcio Rosas
+          <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-purple-500 truncate hidden xs:block">
+            Key Márcio Rosas
+          </h2>
+          <h2 className="text-lg font-bold text-primary-400 xs:hidden">
+            Key
           </h2>
           
           <div className="flex gap-2">
-             <button 
-              onClick={onForceSave}
-              className="p-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors text-green-400 border border-gray-700"
-              title="Salvar Agora"
-            >
-              <SaveIcon size={18} />
-            </button>
-
              <button 
               onClick={handleExport}
               className="p-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors text-blue-400 border border-gray-700"
@@ -243,7 +194,6 @@ const ChordLibrary: React.FC<ChordLibraryProps> = ({
           </div>
           
           <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={handleFileChange} />
-          <input type="file" ref={audioInputRef} className="hidden" accept="audio/*" onChange={handleAudioUpload} />
         </div>
 
         {/* Sound Settings Panel */}
@@ -251,38 +201,32 @@ const ChordLibrary: React.FC<ChordLibraryProps> = ({
           <div className="bg-gray-800 p-3 rounded-lg border border-gray-700 animate-in fade-in slide-in-from-top-2">
              <div className="flex justify-between items-center mb-2">
                 <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-                  <Settings size={14} /> Fonte de Áudio
+                  <Settings size={14} /> Configuração de Som
                 </h4>
-                {hasCustomSound && (
-                  <button onClick={handleClearAudio} className="text-red-400 text-xs flex items-center gap-1 hover:underline">
-                    <Trash2 size={10} /> Remover Som Personalizado
-                  </button>
-                )}
              </div>
              
-             <div className="flex gap-2">
-               <button 
-                 onClick={() => toggleSoundMode('piano')}
-                 className={`flex-1 py-2 px-3 rounded text-sm font-medium border transition-colors ${soundMode === 'piano' ? 'bg-primary-600 border-primary-500 text-white' : 'bg-gray-700 border-gray-600 text-gray-400'}`}
-               >
-                 Piano Web
-               </button>
-               <button 
-                 onClick={() => {
-                   if(hasCustomSound) toggleSoundMode('custom');
-                   else audioInputRef.current?.click();
-                 }}
-                 className={`flex-1 py-2 px-3 rounded text-sm font-medium border transition-colors ${soundMode === 'custom' ? 'bg-purple-600 border-purple-500 text-white' : 'bg-gray-700 border-gray-600 text-gray-400'}`}
-               >
-                 <span className="flex items-center justify-center gap-2">
-                   {hasCustomSound ? <CheckCircle size={14} /> : <Mic size={14} />}
-                   {hasCustomSound ? 'Usar Meu Som' : 'Carregar Som'}
-                 </span>
-               </button>
+             {/* Volume Slider */}
+             <div className="space-y-1 mb-3">
+               <div className="flex justify-between text-xs text-gray-400">
+                 <span className="flex items-center gap-1"><Volume2 size={12}/> Volume / Ganho</span>
+                 <span>{Math.round(volume * 100)}%</span>
+               </div>
+               <input 
+                 type="range" 
+                 min="0" 
+                 max="3" 
+                 step="0.1" 
+                 value={volume} 
+                 onChange={onVolumeChange}
+                 className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-500"
+               />
+               <div className="flex justify-between text-[10px] text-gray-600 px-1">
+                 <span>0%</span>
+                 <span>100%</span>
+                 <span>200%</span>
+                 <span>300%</span>
+               </div>
              </div>
-             <p className="text-[10px] text-gray-500 mt-2 italic">
-               * Nota recomendada para envio: Dó (C3). O app salva seu som automaticamente.
-             </p>
           </div>
         )}
 

@@ -93,7 +93,7 @@ const ChordCreator: React.FC<ChordCreatorProps> = ({
             </button>
           </div>
           <div className="flex flex-wrap gap-2 min-h-[40px]">
-            {Array.from(selectedNotes).sort((a,b) => a - b).map(noteIdx => (
+            {Array.from(selectedNotes).sort((a: number, b: number) => a - b).map(noteIdx => (
               <span key={noteIdx} className="px-3 py-1 bg-primary-900/50 text-primary-300 rounded-full text-sm border border-primary-500/30">
                 Nota {noteIdx}
               </span>

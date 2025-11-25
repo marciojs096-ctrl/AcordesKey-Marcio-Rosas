@@ -32,14 +32,12 @@ const PianoKey: React.FC<PianoKeyProps> = ({
 
   if (isSharp) {
     // Sharp Key
-    // Fixed widths: w-6 (1.5rem/24px) on mobile, w-8 (2rem/32px) on desktop
-    // Negative margins: -mx-3 (-0.75rem) on mobile, -mx-4 (-1rem) on desktop
-    // This centers the black key exactly over the border of two white keys (assuming white keys are w-10/w-14)
+    // Increased font size and adjusted height for mobile readability
     return (
       <div
-        className={`relative z-10 h-[60%] rounded-b-md shadow-md transition-all duration-75 select-none 
+        className={`relative z-10 h-[55%] md:h-[60%] rounded-b-md shadow-md transition-all duration-75 select-none 
         flex-none w-8 -mx-4 md:w-10 md:-mx-5
-        flex flex-col justify-end pb-2 items-center leading-none
+        flex flex-col justify-end pb-3 items-center leading-tight
         ${isActive 
           ? 'bg-green-600 scale-y-95 shadow-glow border border-green-500' // Dark Green when pressed
           : isHighlighted 
@@ -52,7 +50,7 @@ const PianoKey: React.FC<PianoKeyProps> = ({
         onTouchStart={handleStart}
         onTouchEnd={handleEnd}
       >
-        <div className={`text-[8px] md:text-[9px] text-center font-bold whitespace-pre-line pointer-events-none opacity-90
+        <div className={`text-[10px] md:text-xs text-center font-bold whitespace-pre-line pointer-events-none opacity-90
           ${isActive || isHighlighted ? 'text-white' : 'text-gray-400'}
         `}>
           {noteName}
@@ -62,7 +60,8 @@ const PianoKey: React.FC<PianoKeyProps> = ({
   }
 
   // White Key
-  // Fixed widths: w-12 (3rem/48px) on mobile, w-14 (3.5rem/56px) on desktop
+  // Moved label up (bottom-6) to avoid OS gesture bars
+  // Increased font size
   return (
     <div
       className={`relative flex-none h-full rounded-b-lg border border-gray-300 transition-colors duration-75 select-none
@@ -80,7 +79,7 @@ const PianoKey: React.FC<PianoKeyProps> = ({
       onTouchStart={handleStart}
       onTouchEnd={handleEnd}
     >
-      <span className="absolute bottom-2 md:bottom-4 w-full text-center text-[10px] md:text-xs font-bold text-gray-500 pointer-events-none">
+      <span className="absolute bottom-6 md:bottom-4 w-full text-center text-xs md:text-sm font-bold text-gray-600 pointer-events-none bg-inherit pb-1 md:pb-0">
         {noteName}
       </span>
     </div>

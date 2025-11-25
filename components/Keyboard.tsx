@@ -20,21 +20,23 @@ const Keyboard: React.FC<KeyboardProps> = ({
   isCreatorMode 
 }) => {
   
-  // Generate 7 Octaves + 1 note (C1 to C8) = 85 keys
-  // Start at index 0 (C1)
+  // Generate 5 Octaves + 1 note (C2 to C7) = 61 keys
+  // Start at index 12 (C2) relative to C1 (0)
   const keys = useMemo(() => {
     const generatedKeys: Note[] = [];
-    const baseFreq = 32.703; // C1
-    const totalKeys = 85; // C1 to C8 inclusive
+    const baseFreq = 32.703; // C1 frequency (approx)
+    const startKey = 12; // Start at C2
+    const totalKeys = 61; // 5 Octaves (C2 to C7 inclusive)
 
     for (let i = 0; i < totalKeys; i++) {
-      const noteData = NOTES_DATA[i % 12];
-      const octave = Math.floor(i / 12) + 1;
+      const absIndex = startKey + i;
+      const noteData = NOTES_DATA[absIndex % 12];
+      const octave = Math.floor(absIndex / 12) + 1;
       // Formula: f = f0 * (2)^(n/12)
-      const frequency = baseFreq * Math.pow(2, i / 12);
+      const frequency = baseFreq * Math.pow(2, absIndex / 12);
 
       generatedKeys.push({
-        index: i,
+        index: absIndex,
         name: noteData.name,
         isSharp: noteData.isSharp,
         octave,
@@ -47,8 +49,11 @@ const Keyboard: React.FC<KeyboardProps> = ({
   const handlePress = (idx: number) => {
     // In creator mode, we toggle instead of just momentary play
     if (!isCreatorMode) {
-      const note = keys[idx];
-      audioEngine.playNote(note.frequency, idx);
+      // Find note in our generated keys array
+      const note = keys.find(k => k.index === idx);
+      if (note) {
+        audioEngine.playNote(note.frequency, idx);
+      }
     }
     onPlayNote(idx);
   };
@@ -62,7 +67,7 @@ const Keyboard: React.FC<KeyboardProps> = ({
 
   const getNoteLabel = (note: Note) => {
     if (!note.isSharp) {
-      return `${note.name}${note.octave}`;
+      return note.name; // Removed octave number (e.g. "C" instead of "C2")
     }
     // Map sharps to flats for display
     // C# -> Db, D# -> Eb, etc.
@@ -77,13 +82,18 @@ const Keyboard: React.FC<KeyboardProps> = ({
   };
 
   return (
-    <div className="w-full h-full bg-gray-900 overflow-x-auto overflow-y-hidden shadow-inner custom-scrollbar">
+    <div className="w-full h-full bg-gray-900 overflow-x-auto overflow-y-hidden shadow-inner custom-scrollbar relative">
       {/* 
         Container for keys. 
         Using inline-flex to allow it to expand horizontally as much as needed.
-        pt-2 pb-4 to give some breathing room.
+        pt-1 to give room at top.
+        pb-[env(safe-area-inset-bottom)] ensures the scrollbar and keys aren't hidden behind gesture bars.
+        min-h-full forces container to fill height.
       */}
-      <div className="inline-flex h-full px-4 pt-1 pb-2 min-w-max">
+      <div 
+        className="inline-flex h-full px-4 pt-1 min-w-max"
+        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+      >
          {keys.map((note) => {
            return (
              <PianoKey

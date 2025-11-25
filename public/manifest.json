@@ -1,0 +1,52 @@
+{
+  "id": "/",
+  "name": "Key Márcio Rosas",
+  "short_name": "Key Márcio Rosas",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0d1117",
+  "description": "Teclado musical de 5 oitavas com banco de acordes personalizado e compartilhável.",
+  "orientation": "any",
+  "scope": "/",
+  "dir": "ltr",
+  "lang": "pt-BR",
+  "categories": [
+    "music",
+    "education",
+    "entertainment"
+  ],
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3069/3069177.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3069/3069177.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3069/3069177.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tela Principal no Desktop"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3069/3069177.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Visualização Mobile"
+    }
+  ],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
+}
