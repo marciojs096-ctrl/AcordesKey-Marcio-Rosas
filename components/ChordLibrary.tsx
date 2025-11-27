@@ -1,7 +1,6 @@
 
 import React, { useState, useMemo, useRef } from 'react';
-import { Chord, ChordCategory } from '../types';
-import { CHORD_CATEGORIES } from '../constants';
+import { Chord } from '../types';
 import { Play, Trash2, Search, Music2, Download, Upload, Music, Settings, AlertTriangle, Volume2 } from 'lucide-react';
 import { audioEngine } from '../services/audioEngine';
 
@@ -17,12 +16,6 @@ interface ChordLibraryProps {
   onVolumeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const FILTER_CATEGORIES: (ChordCategory | 'Todos' | 'Consonantes')[] = [
-  'Todos',
-  'Consonantes',
-  ...CHORD_CATEGORIES
-];
-
 const ChordLibrary: React.FC<ChordLibraryProps> = ({
   chords,
   onPlayChord,
@@ -36,7 +29,6 @@ const ChordLibrary: React.FC<ChordLibraryProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeChordId, setActiveChordId] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
   const [showSoundSettings, setShowSoundSettings] = useState(false);
   
   // State for modals
@@ -46,19 +38,9 @@ const ChordLibrary: React.FC<ChordLibraryProps> = ({
 
   const filteredChords = useMemo(() => {
     return chords.filter(c => {
-      const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase());
-      if (!matchesSearch) return false;
-      if (selectedCategory === 'Todos') return true;
-      if (selectedCategory === 'Consonantes') {
-        return c.category === 'Maior' || c.category === 'Menor';
-      }
-      if (c.category === selectedCategory) return true;
-      if (selectedCategory === 'Outros') {
-        return !c.category || c.category === 'Outros';
-      }
-      return false;
+      return c.name.toLowerCase().includes(searchTerm.toLowerCase());
     });
-  }, [chords, searchTerm, selectedCategory]);
+  }, [chords, searchTerm]);
 
   const handlePlay = (chord: Chord) => {
     // Ensure audio context is running (fix for iOS/Android suspend)
@@ -160,11 +142,9 @@ const ChordLibrary: React.FC<ChordLibraryProps> = ({
         
         {/* Top Control Row */}
         <div className="flex justify-between items-center gap-2">
-          <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-purple-500 truncate hidden xs:block">
+          {/* App Name - Always Visible */}
+          <h2 className="text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-purple-500 truncate">
             Key Márcio Rosas
-          </h2>
-          <h2 className="text-lg font-bold text-primary-400 xs:hidden">
-            Key
           </h2>
           
           <div className="flex gap-2">
@@ -240,24 +220,6 @@ const ChordLibrary: React.FC<ChordLibraryProps> = ({
             className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-primary-500 transition-colors text-sm"
           />
         </div>
-
-        {/* Category Filters */}
-        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4">
-           {FILTER_CATEGORIES.map(cat => (
-             <button
-               key={cat}
-               onClick={() => setSelectedCategory(cat)}
-               className={`
-                 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium transition-all border
-                 ${selectedCategory === cat 
-                   ? 'bg-primary-600 border-primary-500 text-white shadow-glow' 
-                   : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700'}
-               `}
-             >
-               {cat}
-             </button>
-           ))}
-        </div>
       </div>
 
       {/* List */}
@@ -267,7 +229,7 @@ const ChordLibrary: React.FC<ChordLibraryProps> = ({
             <div 
               key={chord.id}
               className={`
-                relative group p-3 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between h-24 select-none
+                relative group p-3 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between h-20 select-none
                 ${activeChordId === chord.id 
                   ? 'bg-primary-900/40 border-primary-500 shadow-glow' 
                   : 'bg-gray-800 border-gray-700 hover:border-gray-600 hover:bg-gray-750'}
@@ -292,9 +254,6 @@ const ChordLibrary: React.FC<ChordLibraryProps> = ({
               </div>
               
               <div className="flex justify-between items-end mt-1">
-                <span className="text-[10px] text-gray-500 font-mono bg-gray-900/50 px-1.5 py-0.5 rounded">
-                   {chord.category || 'Outros'}
-                 </span>
                  <div className={`
                    w-7 h-7 rounded-full flex items-center justify-center transition-colors
                    ${activeChordId === chord.id ? 'bg-primary-500 text-white' : 'bg-gray-700 text-gray-400 group-hover:bg-gray-600'}
@@ -315,7 +274,7 @@ const ChordLibrary: React.FC<ChordLibraryProps> = ({
             <p className="text-sm max-w-xs mt-2">
               {chords.length === 0 
                 ? "Seu banco de acordes está vazio. Vá até a aba 'Criar' ou Importe um arquivo."
-                : "Nenhum acorde encontrado nesta categoria."}
+                : "Nenhum acorde encontrado."}
             </p>
           </div>
         )}

@@ -6,15 +6,10 @@
     <title>Key Márcio Rosas</title>
     
     <!-- Favicon -->
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3069/3069177.png" />
+    <link rel="icon" href="icon.png" />
 
-    <!-- PWA Settings -->
-    <link rel="manifest" href="./manifest.json" />
     <meta name="theme-color" content="#0d1117" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Key Márcio Rosas" />
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3069/3069177.png" />
+    <link rel="icon" href="icon.png" />
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -83,14 +78,5 @@
 </head>
   <body class="bg-gray-950 text-white overflow-hidden">
     <div id="root"></div>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
-            .then(reg => console.log('SW registered', reg))
-            .catch(err => console.log('SW failed', err));
-        });
-      }
-    </script>
   </body>
 </html>

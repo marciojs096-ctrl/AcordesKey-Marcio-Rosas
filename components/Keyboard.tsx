@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { NOTES_DATA } from '../constants';
 import { Note } from '../types';
@@ -25,13 +26,19 @@ const Keyboard: React.FC<KeyboardProps> = ({
   const keys = useMemo(() => {
     const generatedKeys: Note[] = [];
     const baseFreq = 32.703; // C1 frequency (approx)
-    const startKey = 12; // Start at C2
+    const startKey = 12; // Start at C2 (Sound)
     const totalKeys = 61; // 5 Octaves (C2 to C7 inclusive)
 
     for (let i = 0; i < totalKeys; i++) {
       const absIndex = startKey + i;
       const noteData = NOTES_DATA[absIndex % 12];
-      const octave = Math.floor(absIndex / 12) + 1;
+      
+      // Visual Octave Adjustment:
+      // Standard C2 is index 12. Math.floor(12/12) + 1 = 2.
+      // User wants C2 sound to be labeled as C1.
+      // So we remove the +1 offset.
+      const octave = Math.floor(absIndex / 12); 
+      
       // Formula: f = f0 * (2)^(n/12)
       const frequency = baseFreq * Math.pow(2, absIndex / 12);
 
@@ -67,7 +74,7 @@ const Keyboard: React.FC<KeyboardProps> = ({
 
   const getNoteLabel = (note: Note) => {
     if (!note.isSharp) {
-      return note.name; // Removed octave number (e.g. "C" instead of "C2")
+      return `${note.name}${note.octave}`;
     }
     // Map sharps to flats for display
     // C# -> Db, D# -> Eb, etc.
@@ -78,11 +85,48 @@ const Keyboard: React.FC<KeyboardProps> = ({
       'G#': 'Ab', 
       'A#': 'Bb'
     };
-    return `${note.name}\n${flatMap[note.name] || ''}`;
+    return `${note.name}${note.octave}\n${flatMap[note.name] || ''}${note.octave}`;
+  };
+
+  // Drag to scroll logic for Mouse (PC)
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [startX, setStartX] = React.useState(0);
+  const [scrollLeft, setScrollLeft] = React.useState(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5; // Scroll speed multiplier
+    scrollRef.current.scrollLeft = scrollLeft - walk;
   };
 
   return (
-    <div className="w-full h-full bg-gray-900 overflow-x-auto overflow-y-hidden shadow-inner custom-scrollbar relative">
+    <div 
+      ref={scrollRef}
+      className="w-full h-full bg-gray-900 overflow-x-auto overflow-y-hidden shadow-inner no-scrollbar relative cursor-grab active:cursor-grabbing"
+      onMouseDown={handleMouseDown}
+      onMouseLeave={handleMouseLeave}
+      onMouseUp={handleMouseUp}
+      onMouseMove={handleMouseMove}
+      style={{ scrollbarWidth: 'none' }}
+    >
       {/* 
         Container for keys. 
         Using inline-flex to allow it to expand horizontally as much as needed.

@@ -21,7 +21,7 @@ const PianoKey: React.FC<PianoKeyProps> = ({
 }) => {
   // Common handlers for both touch and mouse to ensure responsiveness
   const handleStart = (e: React.SyntheticEvent) => {
-    e.preventDefault(); // Prevent ghost clicks
+    // e.preventDefault(); // Removed to allow scrolling
     onPress(index);
   };
 
@@ -29,6 +29,10 @@ const PianoKey: React.FC<PianoKeyProps> = ({
     e.preventDefault();
     onRelease(index);
   };
+  
+  const handleCancel = (e: React.SyntheticEvent) => {
+    onRelease(index);
+  }
 
   if (isSharp) {
     // Sharp Key
@@ -49,9 +53,10 @@ const PianoKey: React.FC<PianoKeyProps> = ({
         onMouseLeave={handleEnd}
         onTouchStart={handleStart}
         onTouchEnd={handleEnd}
+        onTouchCancel={handleCancel}
       >
-        <div className={`text-[10px] md:text-xs text-center font-bold whitespace-pre-line pointer-events-none opacity-90
-          ${isActive || isHighlighted ? 'text-white' : 'text-gray-400'}
+        <div className={`text-[10px] md:text-xs text-center font-bold whitespace-pre-line pointer-events-none transition-opacity duration-100
+          ${isActive || isHighlighted ? 'opacity-100 text-white' : 'opacity-0'}
         `}>
           {noteName}
         </div>
@@ -69,7 +74,7 @@ const PianoKey: React.FC<PianoKeyProps> = ({
       ${isActive 
         ? 'bg-green-200' 
         : isHighlighted 
-          ? 'bg-primary-100' 
+          ? 'bg-blue-200' 
           : 'bg-white'}
       active:bg-green-200
       `}
@@ -78,8 +83,11 @@ const PianoKey: React.FC<PianoKeyProps> = ({
       onMouseLeave={handleEnd}
       onTouchStart={handleStart}
       onTouchEnd={handleEnd}
+      onTouchCancel={handleCancel}
     >
-      <span className="absolute bottom-6 md:bottom-4 w-full text-center text-xs md:text-sm font-bold text-gray-600 pointer-events-none bg-inherit pb-1 md:pb-0">
+      <span className={`absolute bottom-6 md:bottom-4 w-full text-center text-xs md:text-sm font-bold pointer-events-none bg-inherit pb-1 md:pb-0 transition-opacity duration-100
+        ${isActive || isHighlighted ? 'opacity-100 text-gray-800' : 'opacity-0'}
+      `}>
         {noteName}
       </span>
     </div>

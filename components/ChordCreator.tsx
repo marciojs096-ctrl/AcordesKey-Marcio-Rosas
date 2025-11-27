@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { Save, X, RotateCcw, Music } from 'lucide-react';
-import { ChordCategory } from '../types';
-import { CHORD_CATEGORIES } from '../constants';
+import { Save, RotateCcw, Music } from 'lucide-react';
 
 interface ChordCreatorProps {
   selectedNotes: Set<number>;
-  onSave: (name: string, category: ChordCategory) => void;
+  onSave: (name: string) => void;
   onCancel: () => void;
   onClear: () => void;
 }
@@ -17,7 +15,6 @@ const ChordCreator: React.FC<ChordCreatorProps> = ({
   onClear
 }) => {
   const [name, setName] = useState('');
-  const [category, setCategory] = useState<ChordCategory>('Outros');
   const [error, setError] = useState('');
 
   const handleSave = () => {
@@ -29,7 +26,7 @@ const ChordCreator: React.FC<ChordCreatorProps> = ({
       setError('Selecione pelo menos uma nota no teclado.');
       return;
     }
-    onSave(name, category);
+    onSave(name);
   };
 
   return (
@@ -57,28 +54,6 @@ const ChordCreator: React.FC<ChordCreatorProps> = ({
             placeholder="Ex: C Maj7"
             className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:border-primary-500 focus:outline-none text-lg"
           />
-        </div>
-
-        {/* Category Select */}
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">
-            Categoria
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            {CHORD_CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setCategory(cat)}
-                className={`py-2 px-3 rounded-md text-xs md:text-sm font-medium transition-all border ${
-                  category === cat
-                    ? 'bg-primary-600 border-primary-500 text-white shadow-glow'
-                    : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-750'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Notes Display */}
